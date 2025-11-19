@@ -13,9 +13,13 @@ model Source {
   url       String    @unique
   type      SourceType
   isActive  Boolean   @default(true)
+  countryId String?
+  country   Country?  @relation(fields: [countryId], references: [id])
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   articles  Article[]
+  
+  @@index([countryId])
 }
 
 enum SourceType {
@@ -33,11 +37,16 @@ model Article {
   category    Category?
   sourceId    String
   source      Source    @relation(fields: [sourceId], references: [id])
+  countryId   String?
+  country     Country?  @relation(fields: [countryId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
   @@index([publishedAt])
   @@index([category])
+  @@index([countryId])
+  @@index([countryId, publishedAt])
+  @@index([countryId, category])
 }
 
 enum Category {
@@ -49,4 +58,45 @@ enum Category {
   GOVERNANCE
   EMIGRATION
   LAW
+}
+
+model Country {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  slug        String   @unique
+  isActive    Boolean  @default(true)
+  
+  languages   CountryLanguage[]
+  sources     Source[]
+  articles    Article[]
+  aiSettings  CountryAISettings?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CountryLanguage {
+  id           String   @id @default(uuid())
+  countryId    String
+  country      Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  
+  languageCode String
+  languageName String
+  isDefault    Boolean  @default(false)
+  
+  @@unique([countryId, languageCode])
+}
+
+model CountryAISettings {
+  id                    String   @id @default(uuid())
+  countryId             String   @unique
+  country               Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  
+  filterPrompt          String   @db.Text
+  categorizationPrompt  String   @db.Text
+  summaryPrompt         String   @db.Text
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
