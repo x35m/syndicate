@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface Language {
   code: string;
@@ -29,6 +30,7 @@ interface CountriesResponse {
 }
 
 export function CountrySelector() {
+  const t = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
   const [countries, setCountries] = useState<Country[]>([]);
@@ -63,7 +65,7 @@ export function CountrySelector() {
 
   if (loading) {
     return (
-      <div className="text-sm text-gray-500">Loading...</div>
+      <div className="text-sm text-gray-500">{t('loading')}</div>
     );
   }
 
@@ -84,7 +86,7 @@ export function CountrySelector() {
         className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
       >
         <option value="" disabled>
-          Select Country
+          {t('selectCountry')}
         </option>
         {countries.map(country => (
           <option key={country.code} value={country.slug}>

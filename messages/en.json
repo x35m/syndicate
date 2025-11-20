@@ -1,0 +1,23 @@
+{
+  "common": {
+    "title": "MediaSyndicate",
+    "selectCountry": "Select Country",
+    "loading": "Loading..."
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About"
+  },
+  "country": {
+    "availableLanguages": "Available Languages",
+    "aiSettings": "AI Settings",
+    "default": "Default",
+    "contentFilteringEnabled": "Content filtering enabled",
+    "aiCategorizationEnabled": "AI categorization enabled",
+    "aiSummarizationEnabled": "AI summarization enabled",
+    "noAiSettings": "No AI settings configured",
+    "comingSoon": "Coming Soon",
+    "articlesWillAppear": "News articles for {countryName} will be displayed here once RSS import is implemented."
+  }
+}
+

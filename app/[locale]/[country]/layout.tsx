@@ -10,9 +10,8 @@ export default async function CountryLayout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ country: string }>;
+  params: Promise<{ locale: string; country: string }>;
 }) {
-  // Await params
   const { country: countrySlug } = await params;
 
   // Получаем страну из БД

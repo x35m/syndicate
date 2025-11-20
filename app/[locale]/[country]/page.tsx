@@ -1,12 +1,19 @@
 'use client';
 
 import { useCountry } from '@/contexts/CountryContext';
+import { useTranslations } from 'next-intl';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export default function CountryPage() {
+  const t = useTranslations('country');
   const { country } = useCountry();
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end mb-4">
+        <LanguageSelector />
+      </div>
+
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex items-center space-x-3 mb-4">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -19,7 +26,7 @@ export default function CountryPage() {
 
         <div className="border-t border-gray-200 pt-4">
           <h2 className="text-lg font-semibold text-gray-700 mb-3">
-            Available Languages
+            {t('availableLanguages')}
           </h2>
           <div className="flex flex-wrap gap-2">
             {country.languages.map(lang => (
@@ -32,7 +39,7 @@ export default function CountryPage() {
                 }`}
               >
                 {lang.name} ({lang.code})
-                {lang.isDefault && ' • Default'}
+                {lang.isDefault && ' • ' + t('default')}
               </span>
             ))}
           </div>
@@ -40,7 +47,7 @@ export default function CountryPage() {
 
         <div className="border-t border-gray-200 pt-4 mt-4">
           <h2 className="text-lg font-semibold text-gray-700 mb-3">
-            AI Settings
+            {t('aiSettings')}
           </h2>
           <div className="text-sm text-gray-600">
             {country.aiSettings ? (
@@ -49,24 +56,24 @@ export default function CountryPage() {
                   <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span>Content filtering enabled</span>
+                  <span>{t('contentFilteringEnabled')}</span>
                 </div>
                 <div className="flex items-center">
                   <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span>AI categorization enabled</span>
+                  <span>{t('aiCategorizationEnabled')}</span>
                 </div>
                 <div className="flex items-center">
                   <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span>AI summarization enabled</span>
+                  <span>{t('aiSummarizationEnabled')}</span>
                 </div>
               </div>
             ) : (
               <div className="text-gray-500">
-                AI settings not configured
+                {t('noAiSettings')}
               </div>
             )}
           </div>

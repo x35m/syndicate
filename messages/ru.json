@@ -1,0 +1,23 @@
+{
+  "common": {
+    "title": "МедиаСиндикат",
+    "selectCountry": "Выберите страну",
+    "loading": "Загрузка..."
+  },
+  "nav": {
+    "home": "Главная",
+    "about": "О нас"
+  },
+  "country": {
+    "availableLanguages": "Доступные языки",
+    "aiSettings": "Настройки AI",
+    "default": "По умолчанию",
+    "contentFilteringEnabled": "Фильтрация контента включена",
+    "aiCategorizationEnabled": "AI категоризация включена",
+    "aiSummarizationEnabled": "AI суммаризация включена",
+    "noAiSettings": "Настройки AI не настроены",
+    "comingSoon": "Скоро",
+    "articlesWillAppear": "Новости для {countryName} появятся здесь после внедрения импорта RSS."
+  }
+}
+
