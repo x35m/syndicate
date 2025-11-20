@@ -10,11 +10,14 @@ export default async function CountryLayout({
   params,
 }: {
   children: ReactNode;
-  params: { country: string };
+  params: Promise<{ country: string }>;
 }) {
+  // Await params
+  const { country: countrySlug } = await params;
+
   // Получаем страну из БД
   const country = await prisma.country.findUnique({
-    where: { slug: params.country },
+    where: { slug: countrySlug },
     include: {
       languages: true,
       aiSettings: true,
