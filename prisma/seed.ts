@@ -80,6 +80,35 @@ Focus on key facts and main message.`,
   });
   console.log('✅ Added AI settings for Ukraine');
 
+  // 4. Создаем RSS источники для Ukraine
+  await prisma.source.createMany({
+    data: [
+      {
+        name: 'Ukrainska Pravda',
+        url: 'https://www.pravda.com.ua/rss/',
+        type: 'RSS',
+        isActive: true,
+        countryId: ukraine.id,
+      },
+      {
+        name: 'Kyiv Post',
+        url: 'https://www.kyivpost.com/feed',
+        type: 'RSS',
+        isActive: true,
+        countryId: ukraine.id,
+      },
+      {
+        name: 'Interfax Ukraine',
+        url: 'https://interfax.com.ua/news/last.rss',
+        type: 'RSS',
+        isActive: true,
+        countryId: ukraine.id,
+      },
+    ],
+  });
+
+  console.log('✅ RSS sources created for Ukraine');
+
   console.log('🌱 Seeding completed!');
 }
 
