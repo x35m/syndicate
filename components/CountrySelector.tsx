@@ -45,12 +45,22 @@ export function CountrySelector() {
         
         // Определяем текущую страну из URL
         const pathParts = pathname.split('/').filter(Boolean);
-        // pathParts[0] - локаль (en/uk/ru)
-        // pathParts[1] - страна (ukraine)
-        if (pathParts.length > 1) {
-          const countrySlug = pathParts[1];
-          const current = data.countries.find(c => c.slug === countrySlug);
-          setCurrentCountry(current || null);
+        let countrySlug: string | null = null;
+
+        // Проверяем первый сегмент - локаль или страна?
+        if (pathParts.length > 0) {
+          if (['en', 'uk', 'ru'].includes(pathParts[0])) {
+            // Первый сегмент - локаль, страна во втором
+            countrySlug = pathParts[1] || null;
+          } else {
+            // Первый сегмент - страна (нет явной локали)
+            countrySlug = pathParts[0];
+          }
+          
+          if (countrySlug) {
+            const current = data.countries.find(c => c.slug === countrySlug);
+            setCurrentCountry(current || null);
+          }
         }
         
         setLoading(false);
