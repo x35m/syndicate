@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useCountry } from '@/contexts/CountryContext';
 
@@ -23,16 +23,18 @@ export function LanguageSelector() {
   const { country } = useCountry();
 
   const handleLanguageChange = (newLocale: string) => {
-    // Получаем путь без локали
-    const pathWithoutLocale = pathname.replace(/^\/(en|uk|ru)/, '') || '/';
+    // Получаем текущий путь без локали
+    const segments = pathname.split('/').filter(Boolean);
     
-    // Если новая локаль - английский (defaultLocale), не добавляем префикс
-    const newPath = newLocale === 'en' 
-      ? pathWithoutLocale 
-      : `/${newLocale}${pathWithoutLocale}`;
+    // Убираем локаль из начала пути если она там есть
+    if (['en', 'uk', 'ru'].includes(segments[0])) {
+      segments.shift();
+    }
+    
+    // Формируем новый путь
+    const newPath = `/${newLocale}/${segments.join('/')}`;
     
     router.push(newPath);
-    router.refresh();
   };
 
   return (
@@ -56,4 +58,3 @@ export function LanguageSelector() {
     </div>
   );
 }
-
