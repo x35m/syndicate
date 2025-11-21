@@ -1,101 +1,145 @@
-import { PrismaClient } from '@prisma/client';
 import { RSSParser } from './RSSParser';
 import { CountryFilterService } from './CountryFilterService';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+interface ImportResult {
+  success: boolean;
+  articlesFound: number;
+  articlesImported: number;
+  errors: string[];
+}
 
 export class RSSImporter {
   private rssParser: RSSParser;
   private filterService: CountryFilterService;
+  private readonly BATCH_SIZE = 5;
+  private readonly DELAY_MS = 2000;
 
-  constructor(groqApiKey: string) {
+  constructor() {
     this.rssParser = new RSSParser();
+    const groqApiKey = process.env.GROQ_API_KEY || '';
     this.filterService = new CountryFilterService(groqApiKey);
   }
 
-  async importForCountry(countrySlug: string) {
-    // Получаем страну с источниками
-    const country = await prisma.country.findUnique({
-      where: { slug: countrySlug, isActive: true },
-      include: { sources: { where: { isActive: true, type: 'RSS' } } }
-    });
-
-    if (!country) {
-      throw new Error(`Country ${countrySlug} not found or inactive`);
-    }
-
-    console.log(`Starting import for ${country.name}, ${country.sources.length} sources`);
-
-    let totalArticles = 0;
-    let totalRelevant = 0;
-    let totalSaved = 0;
-
-    // Обрабатываем каждый source отдельно
-    for (const source of country.sources) {
-      try {
-        console.log(`Parsing source: ${source.name} (${source.url})`);
-        
-        // Парсим RSS
-        const articles = await this.rssParser.parseURL(source.url);
-        totalArticles += articles.length;
-
-        // Фильтруем через AI
-        const filterResults = await this.filterService.filterBatch(
-          articles.map(a => ({ title: a.title, content: a.content })),
-          country.name
-        );
-
-        // Сохраняем релевантные статьи
-        const relevantArticles = articles.filter((_, i) => 
-          filterResults[i].isRelevant && filterResults[i].confidence > 0.7
-        );
-        totalRelevant += relevantArticles.length;
-
-        for (const article of relevantArticles) {
-          try {
-            await prisma.article.upsert({
-              where: { url: article.link },
-              update: {},
-              create: {
-                title: article.title,
-                content: article.content,
-                url: article.link,
-                publishedAt: new Date(article.pubDate),
-                sourceId: source.id,
-                countryId: country.id,
-              }
-            });
-            totalSaved++;
-          } catch (error) {
-            console.error(`Failed to save article ${article.link}:`, error);
-          }
-        }
-      } catch (error) {
-        console.error(`Failed to process source ${source.url}:`, error);
-      }
-    }
-
-    console.log(`Import complete for ${country.name}: ${totalSaved}/${totalRelevant} saved`);
-    
-    return { total: totalArticles, relevant: totalRelevant, saved: totalSaved };
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async importAll() {
-    const countries = await prisma.country.findMany({
-      where: { isActive: true }
-    });
+  async importForCountry(countryCode: string): Promise<ImportResult> {
+    const logId = await this.createLog(countryCode);
+    
+    try {
+      const country = await prisma.country.findUnique({
+        where: { code: countryCode },
+        include: { sources: { where: { isActive: true, type: 'RSS' } } }
+      });
 
-    const results = [];
-    for (const country of countries) {
-      try {
-        const result = await this.importForCountry(country.slug);
-        results.push({ country: country.slug, ...result });
-      } catch (error) {
-        console.error(`Failed to import for ${country.slug}:`, error);
+      if (!country) {
+        throw new Error(`Country ${countryCode} not found`);
       }
-    }
 
-    return results;
+      let totalArticles = 0;
+      let importedArticles = 0;
+      const errors: string[] = [];
+
+      for (const source of country.sources) {
+        try {
+          const articles = await this.rssParser.parseURL(source.url);
+          totalArticles += articles.length;
+
+          for (let i = 0; i < articles.length; i += this.BATCH_SIZE) {
+            const batch = articles.slice(i, i + this.BATCH_SIZE);
+            
+            for (const article of batch) {
+              try {
+                const exists = await prisma.article.findUnique({
+                  where: { url: article.link }
+                });
+
+                if (!exists) {
+                  const filterResult = await this.filterService.filterArticle(
+                    article.title,
+                    article.content || '',
+                    country.name
+                  );
+
+                  if (filterResult.isRelevant && filterResult.confidence > 0.7) {
+                    await prisma.article.create({
+                      data: {
+                        title: article.title,
+                        url: article.link,
+                        content: article.content,
+                        publishedAt: new Date(article.pubDate),
+                        sourceId: source.id,
+                        countryId: country.id
+                      }
+                    });
+                    importedArticles++;
+                  }
+                }
+              } catch (error) {
+                const errorMsg = error instanceof Error ? error.message : String(error);
+                errors.push(`Article ${article.title}: ${errorMsg}`);
+              }
+            }
+            
+            if (i + this.BATCH_SIZE < articles.length) {
+              await this.delay(this.DELAY_MS);
+            }
+          }
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          errors.push(`Source ${source.name}: ${errorMsg}`);
+        }
+      }
+
+      await this.updateLog(logId, 'success', totalArticles, importedArticles);
+
+      return {
+        success: true,
+        articlesFound: totalArticles,
+        articlesImported: importedArticles,
+        errors
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      await this.updateLog(logId, 'failed', 0, 0, errorMsg);
+      
+      return {
+        success: false,
+        articlesFound: 0,
+        articlesImported: 0,
+        errors: [errorMsg]
+      };
+    }
+  }
+
+  private async createLog(countryCode: string): Promise<string> {
+    const log = await prisma.importLog.create({
+      data: {
+        countryCode,
+        status: 'running'
+      }
+    });
+    return log.id;
+  }
+
+  private async updateLog(
+    id: string,
+    status: string,
+    found: number,
+    imported: number,
+    error?: string
+  ): Promise<void> {
+    await prisma.importLog.update({
+      where: { id },
+      data: {
+        status,
+        articlesFound: found,
+        articlesImported: imported,
+        errorMessage: error,
+        finishedAt: new Date()
+      }
+    });
   }
 }
-

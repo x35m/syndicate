@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RSSImporter } from '@/lib/services/RSSImporter';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,19 +14,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const importer = new RSSImporter(groqApiKey);
+    const importer = new RSSImporter();
 
     let result;
     if (country) {
-      // Импорт для конкретной страны
-      result = await importer.importForCountry(country);
+      // Преобразуем slug в code, если передан slug
+      const countryData = await prisma.country.findUnique({
+        where: { slug: country }
+      });
+      
+      if (!countryData) {
+        // Если не найден по slug, пробуем как code
+        const countryByCode = await prisma.country.findUnique({
+          where: { code: country.toUpperCase() }
+        });
+        
+        if (!countryByCode) {
+          return NextResponse.json(
+            { error: `Country ${country} not found` },
+            { status: 404 }
+          );
+        }
+        
+        result = await importer.importForCountry(countryByCode.code);
+      } else {
+        result = await importer.importForCountry(countryData.code);
+      }
     } else {
-      // Импорт для всех стран
-      result = await importer.importAll();
+      return NextResponse.json(
+        { error: 'Country parameter is required' },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({
-      status: 'success',
+      status: result.success ? 'success' : 'error',
       result
     });
   } catch (error) {
