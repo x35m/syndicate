@@ -17,7 +17,7 @@ export class RSSImporter {
     // Получаем страну с источниками
     const country = await prisma.country.findUnique({
       where: { slug: countrySlug, isActive: true },
-      include: { sources: { where: { isActive: true } } }
+      include: { sources: { where: { isActive: true, type: 'RSS' } } }
     });
 
     if (!country) {
@@ -26,51 +26,58 @@ export class RSSImporter {
 
     console.log(`Starting import for ${country.name}, ${country.sources.length} sources`);
 
-    const rssUrls = country.sources
-      .filter(source => source.type === 'RSS')
-      .map(source => source.url);
+    let totalArticles = 0;
+    let totalRelevant = 0;
+    let totalSaved = 0;
 
-    // Парсим все RSS фиды
-    const articles = await this.rssParser.parseMultipleURLs(rssUrls);
-    console.log(`Parsed ${articles.length} articles`);
-
-    // Фильтруем через AI
-    const filterResults = await this.filterService.filterBatch(
-      articles.map(a => ({ title: a.title, content: a.content })),
-      country.name
-    );
-
-    // Сохраняем релевантные статьи
-    const relevantArticles = articles.filter((_, i) => 
-      filterResults[i].isRelevant && filterResults[i].confidence > 0.7
-    );
-
-    console.log(`${relevantArticles.length} relevant articles after filtering`);
-
-    let savedCount = 0;
-    for (const article of relevantArticles) {
+    // Обрабатываем каждый source отдельно
+    for (const source of country.sources) {
       try {
-        await prisma.article.upsert({
-          where: { url: article.link },
-          update: {},
-          create: {
-            title: article.title,
-            content: article.content,
-            url: article.link,
-            publishedAt: new Date(article.pubDate),
-            author: article.author,
-            countryId: country.id,
+        console.log(`Parsing source: ${source.name} (${source.url})`);
+        
+        // Парсим RSS
+        const articles = await this.rssParser.parseURL(source.url);
+        totalArticles += articles.length;
+
+        // Фильтруем через AI
+        const filterResults = await this.filterService.filterBatch(
+          articles.map(a => ({ title: a.title, content: a.content })),
+          country.name
+        );
+
+        // Сохраняем релевантные статьи
+        const relevantArticles = articles.filter((_, i) => 
+          filterResults[i].isRelevant && filterResults[i].confidence > 0.7
+        );
+        totalRelevant += relevantArticles.length;
+
+        for (const article of relevantArticles) {
+          try {
+            await prisma.article.upsert({
+              where: { url: article.link },
+              update: {},
+              create: {
+                title: article.title,
+                content: article.content,
+                url: article.link,
+                publishedAt: new Date(article.pubDate),
+                sourceId: source.id,
+                countryId: country.id,
+              }
+            });
+            totalSaved++;
+          } catch (error) {
+            console.error(`Failed to save article ${article.link}:`, error);
           }
-        });
-        savedCount++;
+        }
       } catch (error) {
-        console.error(`Failed to save article ${article.link}:`, error);
+        console.error(`Failed to process source ${source.url}:`, error);
       }
     }
 
-    console.log(`Saved ${savedCount} new articles for ${country.name}`);
+    console.log(`Import complete for ${country.name}: ${totalSaved}/${totalRelevant} saved`);
     
-    return { total: articles.length, relevant: relevantArticles.length, saved: savedCount };
+    return { total: totalArticles, relevant: totalRelevant, saved: totalSaved };
   }
 
   async importAll() {
