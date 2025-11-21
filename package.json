@@ -9,11 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.0",
+    "@prisma/client": "5.22.0",
     "groq-sdk": "^0.36.0",
     "next": "16.0.3",
     "next-intl": "^4.5.5",
-    "prisma": "^6.19.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "rss-parser": "^3.13.0"
@@ -25,6 +24,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
+    "prisma": "5.22.0",
     "tailwindcss": "^4",
     "tsx": "^4.7.0",
     "typescript": "^5"
