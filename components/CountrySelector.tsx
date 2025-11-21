@@ -45,8 +45,10 @@ export function CountrySelector() {
         
         // Определяем текущую страну из URL
         const pathParts = pathname.split('/').filter(Boolean);
-        if (pathParts.length > 0) {
-          const countrySlug = pathParts[0];
+        // pathParts[0] - локаль (en/uk/ru)
+        // pathParts[1] - страна (ukraine)
+        if (pathParts.length > 1) {
+          const countrySlug = pathParts[1];
           const current = data.countries.find(c => c.slug === countrySlug);
           setCurrentCountry(current || null);
         }
@@ -60,7 +62,11 @@ export function CountrySelector() {
   }, [pathname]);
 
   const handleCountryChange = (slug: string) => {
-    router.push(`/${slug}`);
+    // Извлекаем текущую локаль из pathname
+    const pathParts = pathname.split('/').filter(Boolean);
+    const currentLocale = ['en', 'uk', 'ru'].includes(pathParts[0]) ? pathParts[0] : 'en';
+    
+    router.push(`/${currentLocale}/${slug}`);
   };
 
   if (loading) {
