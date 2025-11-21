@@ -17,7 +17,10 @@
     "aiSummarizationEnabled": "AI summarization enabled",
     "noAiSettings": "No AI settings configured",
     "comingSoon": "Coming Soon",
-    "articlesWillAppear": "News articles for {countryName} will be displayed here once RSS import is implemented."
+    "articlesWillAppear": "News articles for {countryName} will be displayed here once RSS import is implemented.",
+    "latestNews": "Latest News",
+    "noArticles": "No articles available yet",
+    "readMore": "Read more"
   }
 }
 

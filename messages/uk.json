@@ -17,7 +17,10 @@
     "aiSummarizationEnabled": "AI узагальнення увімкнене",
     "noAiSettings": "Налаштування AI не налаштовані",
     "comingSoon": "Незабаром",
-    "articlesWillAppear": "Новини для {countryName} з'являться тут після впровадження імпорту RSS."
+    "articlesWillAppear": "Новини для {countryName} з'являться тут після впровадження імпорту RSS.",
+    "latestNews": "Останні новини",
+    "noArticles": "Поки що немає статей",
+    "readMore": "Читати далі"
   }
 }
 
