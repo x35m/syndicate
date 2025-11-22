@@ -1,11 +1,13 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useCountry } from '@/contexts/CountryContext';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import Link from 'next/link';
 
 export function CountryPageClient({ articles }: { articles: any[] }) {
   const t = useTranslations('country');
+  const locale = useLocale();
   const { country } = useCountry();
 
   return (
@@ -49,9 +51,12 @@ export function CountryPageClient({ articles }: { articles: any[] }) {
                   </div>
                   
                   <h3 className="text-xl font-semibold text-gray-900 hover:text-blue-600">
-                    <a href={article.url} target="_blank" rel="noopener noreferrer">
+                    <Link 
+                      href={`/${locale}/${country.slug}/article/${article.id}`}
+                      className="hover:text-blue-600"
+                    >
                       {article.title}
-                    </a>
+                    </Link>
                   </h3>
                   
                   {article.summary && (

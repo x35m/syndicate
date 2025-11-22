@@ -21,6 +21,9 @@
     "latestNews": "Latest News",
     "noArticles": "No articles available yet",
     "readMore": "Read more"
+  },
+  "Article": {
+    "viewOriginal": "View Original Source"
   }
 }
 
