@@ -61,6 +61,8 @@ RESPOND ONLY WITH VALID JSON, NO OTHER TEXT.`;
     try {
       const prompt = `Rewrite this news article to be unique while keeping all facts accurate. Make it SEO-friendly and natural.
 
+CRITICAL: Write the rewritten content in THE SAME LANGUAGE as the original article. If original is in Ukrainian - write in Ukrainian. If in English - write in English. If in Russian - write in Russian.
+
 Original Title: ${title}
 Original Content: ${content}
 
@@ -71,8 +73,9 @@ Requirements:
 - Keep the same meaning
 - Make it readable and engaging
 - Length: similar to original
+- WRITE IN THE SAME LANGUAGE AS THE ORIGINAL
 
-Respond with ONLY the rewritten content, no additional text or formatting.`;
+Respond with ONLY the rewritten content in the SAME language as original, no additional text or formatting.`;
 
       const completion = await groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
