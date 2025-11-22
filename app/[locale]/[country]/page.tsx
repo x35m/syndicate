@@ -1,4 +1,10 @@
 import { CountryPageClient } from '@/components/CountryPageClient';
+import { prisma } from '@/lib/prisma';
+import type { Metadata } from 'next';
+
+interface CountryPageProps {
+  params: Promise<{ locale: string; country: string }>;
+}
 
 async function getArticles(countrySlug: string) {
   try {
@@ -15,10 +21,48 @@ async function getArticles(countrySlug: string) {
   }
 }
 
+export async function generateMetadata({ params }: CountryPageProps): Promise<Metadata> {
+  const { country: countrySlug, locale } = await params;
+  
+  const country = await prisma.country.findUnique({
+    where: { slug: countrySlug },
+  });
+
+  if (!country) return { title: 'Country Not Found' };
+
+  const url = `https://mediasyndicate.online/${locale}/${countrySlug}`;
+
+  return {
+    title: `${country.name} News - MediaSyndicate`,
+    description: `Latest news and updates from ${country.name}. Stay informed with real-time news aggregation.`,
+    alternates: {
+      canonical: url,
+      languages: {
+        'en': `https://mediasyndicate.online/en/${countrySlug}`,
+        'uk': `https://mediasyndicate.online/uk/${countrySlug}`,
+        'ru': `https://mediasyndicate.online/ru/${countrySlug}`,
+      },
+    },
+    openGraph: {
+      title: `${country.name} News`,
+      description: `Latest news from ${country.name}`,
+      url: url,
+      siteName: 'MediaSyndicate',
+      locale: locale,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title: `${country.name} News`,
+      description: `Latest news from ${country.name}`,
+    },
+  };
+}
+
 export default async function CountryPage({
   params
 }: {
-  params: Promise<{ country: string }>;
+  params: Promise<{ locale: string; country: string }>;
 }) {
   const { country: countrySlug } = await params;
   const articles = await getArticles(countrySlug);

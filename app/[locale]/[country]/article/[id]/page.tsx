@@ -22,15 +22,40 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 
   if (!article) return { title: 'Article Not Found' };
 
+  const description = article.summary || article.content?.substring(0, 160) || '';
+  const url = `https://mediasyndicate.online/en/${article.country?.slug}/article/${id}`;
+
   return {
     title: article.title,
-    description: article.summary || article.content?.substring(0, 160),
+    description: description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title: article.title,
-      description: article.summary || article.content?.substring(0, 160),
+      description: description,
+      url: url,
+      siteName: 'MediaSyndicate',
+      locale: 'en_US',
       type: 'article',
       publishedTime: article.publishedAt.toISOString(),
+      modifiedTime: article.updatedAt.toISOString(),
       authors: [article.source.name],
+      section: article.category || 'News',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: article.title,
+      description: description,
+      site: '@MediaSyndicate',
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
     },
   };
 }
