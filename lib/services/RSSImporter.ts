@@ -17,8 +17,7 @@ export class RSSImporter {
 
   constructor() {
     this.rssParser = new RSSParser();
-    const groqApiKey = process.env.GROQ_API_KEY || '';
-    this.filterService = new CountryFilterService(groqApiKey);
+    this.filterService = new CountryFilterService();
   }
 
   private async delay(ms: number): Promise<void> {
@@ -57,13 +56,13 @@ export class RSSImporter {
                 });
 
                 if (!exists) {
-                  const filterResult = await this.filterService.filterArticle(
+                  const isRelevant = await this.filterService.filterArticle(
                     article.title,
                     article.content || '',
-                    country.name
+                    country.code
                   );
 
-                  if (filterResult.isRelevant && filterResult.confidence > 0.7) {
+                  if (isRelevant) {
                     await prisma.article.create({
                       data: {
                         title: article.title,
