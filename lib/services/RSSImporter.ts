@@ -63,11 +63,17 @@ export class RSSImporter {
                   );
 
                   if (isRelevant) {
+                    const rewrittenContent = await this.filterService.rewriteContent(
+                      article.title,
+                      article.content || ''
+                    );
+                    
                     await prisma.article.create({
                       data: {
                         title: article.title,
                         url: article.link,
                         content: article.content,
+                        rewrittenContent: rewrittenContent,
                         publishedAt: new Date(article.pubDate),
                         sourceId: source.id,
                         countryId: country.id
