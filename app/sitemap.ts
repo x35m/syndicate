@@ -31,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const country of countries) {
     for (const lang of country.languages) {
       routes.push({
-        url: `${baseUrl}/${lang.code}/${country.slug}`,
+        url: `${baseUrl}/${lang.languageCode}/${country.slug}`,
         lastModified: new Date(),
         changeFrequency: 'hourly',
         priority: 0.9,
@@ -53,4 +53,3 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return routes;
 }
-
